@@ -35,13 +35,19 @@ function flattenSurveyData(data, parentKey = "", result = {}) {
 // ------------------ Middleware ------------------
 app.use(express.static(path.join(__dirname, "dist")));
 app.use(cors({
-  origin: ["http://localhost:5175", "https://neuralnetdatascience.com/"],
+  origin: ["http://localhost:5175", "https://neuralnetdatascience.com/", "http://localhost:5174"],
   optionsSuccessStatus: 200,
 }));
 app.use(bodyParser.json());
 
 // ------------------ MongoDB connection ------------------
-mongoose.connect("mongodb://127.0.0.1:27017/innovate", {
+require("dotenv").config();
+
+const uri = "mongodb://neuralnet:NNetBlr@mongodb.nnet-dataviz.com/innovate?authSource=admin";
+
+console.log(uri);
+
+mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
