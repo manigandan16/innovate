@@ -1,1 +1,53 @@
+workflows:
+  ionic-capacitor-both:
+    name: Build Android AAB + iOS IPA (Capacitor)
+    max_build_duration: 60
+    environment:
+      node: 18
+      npm: 9
+      xcode: 15.0
+      groups:
+        - keystore_credentials        # Android signing
+        - app_store_credentials       # iOS App Store API key credentials
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
 
+      - name: Build Ionic Web Assets
+        script: |
+          npm run build
+
+      - name: Sync Capacitor
+        script: |
+          npx cap sync
+
+      - name: Build Android AAB
+        script: |
+          cd android
+          ./gradlew bundleRelease
+
+      - name: Build iOS IPA
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+          -scheme App \
+          -configuration Release \
+          -archivePath build/App.xcarchive archive
+
+          xcodebuild -exportArchive \
+          -archivePath build/App.xcarchive \
+          -exportOptionsPlist ExportOptions.plist \
+          -exportPath build
+    artifacts:
+      - android/app/build/outputs/**/*.aab   # Android output
+      - ios/App/build/*.ipa                  # iOS output
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT   # Upload to Play Store (optional)
+        track: internal
+      app_store_connect:
+        api_key: $APP_STORE_API_KEY
+        key_id: $APP_STORE_KEY_ID
+        issuer_id: $APP_STORE_ISSUER_ID
+        submit_to_testflight: true             # Auto upload to TestFlight
